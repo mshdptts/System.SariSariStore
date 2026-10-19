@@ -31,16 +31,25 @@ public void setName(String name) {
     public double getBuyPrice() {
     return buyPrice; }
 public void setBuyPrice(double buyPrice) {
+    if(buyPrice < 0) {
+        throw new IllegalArgumentException("Buy price cannot be negative.");
+    }
     this.buyPrice = buyPrice; }
 
     public double getSellPrice() {
     return sellPrice; }
 public void setSellPrice(double sellPrice) {
+    if(sellPrice < 0) {
+        throw new IllegalArgumentException("Sell price cannot be negative.");
+    }
     this.sellPrice = sellPrice; }
 
     public int getQuantity() {
     return quantity; }
 public void setQuantity(int quantity) {
+    if(quantity < 0) {
+        throw new IllegalArgumentException("Quantity cannot be negative.");
+    }
     this.quantity = quantity; }
 
 
