@@ -36,4 +36,25 @@ public class InventoryService {
 
         return null;
     }
+
+    public Product restockProduct(String name, int quantity) {
+        Product product = findProductByName(name);
+        if (product != null) {
+            if (quantity < 0) {
+                throw new IllegalArgumentException("Quantity cannot be negative.");
+            }
+            product.setQuantity(product.getQuantity() + quantity);
+            return product;
+        }
+        return null;
+    }
+
+    public Product getLowStockProduct(int threshold) {
+        for (Product product : products) {
+            if (product.getQuantity() < threshold) {
+                return product;
+            }
+        }
+        return null;
+    }
 }
