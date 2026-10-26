@@ -1,19 +1,21 @@
-package SariSariStore.util;  // declares where ung package naka tira so like pede siya magchange 
+package SariSariStore.util;
 
-import java.text.NumberFormat;  // built in class for formattingb numbs, currency,percentage
-import java.util.Locale; // controls like the currency and symbols ung locale represents region and language
+import java.text.NumberFormat;
+import java.util.Locale;
 
-public class MoneyFormatter {  // 
+/** Formats monetary values using the Philippine peso currency format. */
+public class MoneyFormatter {
 
     private static final NumberFormat FORMATTER =
             NumberFormat.getCurrencyInstance(
                     Locale.forLanguageTag("en-PH"));
 
-    private MoneyFormatter() {   // private naga prevent  new MoneyFormatter()
-    // utility class 
+    private MoneyFormatter() {
+        // Utility class.
     }
 
-    public static String format(double amount) {  // naga convert ng number into a peso-formatted string
+    /** Converts an amount to a peso-formatted string. */
+    public static String format(double amount) {
         return FORMATTER.format(amount);
     }
 }

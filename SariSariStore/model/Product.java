@@ -10,7 +10,7 @@ private double sellPrice;
 private int quantity;
 private boolean isAvailable;
 
-//constructor
+// Constructor
 public Product(String name, double buyPrice, double sellPrice, int quantity, boolean isAvailable)
  {
     this.name = name;
@@ -22,7 +22,7 @@ public Product(String name, double buyPrice, double sellPrice, int quantity, boo
 
 
 
-//getters and setters
+// Getters and setters
 public String getName() {
     return name; }
 public void setName(String name) {
