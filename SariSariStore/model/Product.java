@@ -3,7 +3,7 @@ package SariSariStore.model;
 public class Product {
 
     
-
+private int id;
 private String name;
 private double buyPrice;
 private double sellPrice;
@@ -18,6 +18,10 @@ public Product(String name, double buyPrice, double sellPrice, int quantity, boo
     this.sellPrice = sellPrice;
     this.quantity = quantity;
     this.isAvailable = isAvailable;
+}
+public Product(int id, String name, double buyPrice, double sellPrice, int quantity, boolean isAvailable) {
+    this(name, buyPrice, sellPrice, quantity, isAvailable);
+    this.id = id;
 }
 
 
@@ -57,7 +61,11 @@ public void setQuantity(int quantity) {
     return isAvailable; }
 public void setAvailable(boolean isAvailable) {
     this.isAvailable = isAvailable; }
-
+    
+public int getId() {
+    return id; }
+public void setId(int id) {
+    this.id = id; }
 
 
 

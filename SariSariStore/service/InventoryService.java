@@ -1,60 +1,42 @@
 package SariSariStore.service;
 
 import SariSariStore.model.Product;
+import SariSariStore.util.DBConnection;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class InventoryService {
+//database row to Prodauct object
 
-    private ArrayList<Product> products;
+    private Product mapRow(ResultSet rs) throws SQLException {
+        return new Product(
+            rs.getInt("id"),
+            rs.getString("name"),
+            rs.getDouble("buy_price"),
+            rs.getDouble("sell_price"),
+            rs.getInt("quantity"),
+            rs.getBoolean("is_available")
+        );
 
-    public InventoryService() {
-        this.products = new ArrayList<>();
     }
 
-    public void addProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("Product cannot be null.");
-        }
 
-        products.add(product);
-    }
 
-    public boolean removeProduct(Product product) {
-        return products.remove(product);
-    }
+    public void addProduct
 
-    public ArrayList<Product> getProducts() {
-        return new ArrayList<>(products);
-    }
 
-    public Product findProductByName(String name) {
-        for (Product product : products) {
-            if (product.getName().equalsIgnoreCase(name)) {
-                return product;
-            }
-        }
 
-        return null;
-    }
 
-    public Product restockProduct(String name, int quantity) {
-        Product product = findProductByName(name);
-        if (product != null) {
-            if (quantity < 0) {
-                throw new IllegalArgumentException("Quantity cannot be negative.");
-            }
-            product.setQuantity(product.getQuantity() + quantity);
-            return product;
-        }
-        return null;
-    }
 
-    public Product getLowStockProduct(int threshold) {
-        for (Product product : products) {
-            if (product.getQuantity() < threshold) {
-                return product;
-            }
-        }
-        return null;
-    }
+
+
+
+
+
+
 }
