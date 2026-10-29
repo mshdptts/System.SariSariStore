@@ -66,8 +66,10 @@ public class ReportService {
     }
 
 
-
-
+/*getInventorySummary()
+getDailySalesReport(date)
+getSalesReport(startDate, endDate)
+getBestSellingProducts(startDate, endDate) */ //add these idiotttttttttttttt
 
 
 }
