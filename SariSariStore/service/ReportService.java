@@ -46,8 +46,24 @@ public class ReportService {
             rs.getBoolean("is_available"));
 }
 
+    public ArrayList<Product> getOutofStockProducts() {
+        ArrayList<Product> products = new ArrayList<>();
 
+        String sql = "SELECT * FROM products WHERE quantity = 0";
 
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                products.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not retrieve out of stock products: " + e.getMessage(), e);
+        }
+
+        return products;
+    }
 
 
 
