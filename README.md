@@ -38,3 +38,6 @@ SariSariStore/
 
 ### util/
 - **`MoneyFormatter.java`** *(optional)*: Formats prices as pesos (e.g., ₱1,250.00).
+
+### ADDED DATA BASE!!!!
+- This project now utilises MYSQL to manage multiple data base for sales and product items 
