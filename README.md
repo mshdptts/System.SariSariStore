@@ -28,7 +28,8 @@ SariSariStore/
 
 ### service/
 - **`InventoryService.java`**: Add, edit, delete, and search products, and keep track of stock.
-- **`SalesService.java`**: Handles sales: computes totals and reduces stock after each sale.
+- **`SalesService.java`**: Handles sales: computes totals, reduces stock after each sale and records sales.
+- **`SalesItem.java`**: Breaks down individual sales into its components and records it
 - **`ReportService.java`**: Creates reports like daily sales and low-stock alerts.
 
 ### gui/
