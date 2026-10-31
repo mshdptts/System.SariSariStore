@@ -41,3 +41,18 @@ SariSariStore/
 
 ### ADDED DATA BASE!!!!
 - This project now utilises MYSQL to manage multiple data base for sales and product items 
+
+## Testing
+
+The feature test runner covers product and sale-item validation, money formatting,
+inventory operations, sales transactions, rollback behavior, and inventory reports.
+It uses the MySQL connection configured in `DBConnection`.
+
+From the repository root, compile and run it with:
+
+```powershell
+$out = Join-Path $env:TEMP "sarisari-tests"
+New-Item -ItemType Directory -Force $out
+javac -cp "lib/*" -d $out (Get-ChildItem -Recurse -Filter *.java SariSariStore, tests | Select-Object -ExpandProperty FullName)
+java -cp "$out;lib/*" tests.FeatureTests
+```

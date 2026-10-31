@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 
 
@@ -63,13 +62,70 @@ public class ReportService {
         }
 
         return products;
+    } 
+    public ArrayList<Product> getInventorySummary() {
+        ArrayList<Product> products = new ArrayList<>();
+
+        String sql = "SELECT * FROM products";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                products.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not retrieve inventory summary: " + e.getMessage(), e);
+        }
+        return products;
+    }
+
+    public ArrayList<Product> getDailySalesReport(String date) {
+        ArrayList<Product> products = new ArrayList<>();
+
+        String sql = "SELECT * FROM sales WHERE DATE(sale_date) = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, date);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not retrieve daily sales report: " + e.getMessage(), e);
+        }
+
+        return products;
+    }
+
+    public ArrayList<Product> getSalesReport(String startDate, String endDate){
+        ArrayList<Product> products = new ArrayList<>();
+
+        String sql = "SELECT * FROM sales WHERE DATE(sale_date) BETWEEN ? AND ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not retrieve sales report: " + e.getMessage(), e);
+        }
+        return products;
     }
 
 
-/*getInventorySummary()
-getDailySalesReport(date)
-getSalesReport(startDate, endDate)
-getBestSellingProducts(startDate, endDate) */ //add these idiotttttttttttttt
+/* )
 
+getBestSellingProducts(startDate, endDate) */ //wag na to kahirap next time nalang
 
 }
