@@ -13,15 +13,15 @@ private boolean isAvailable;
 // Constructor
 public Product(String name, double buyPrice, double sellPrice, int quantity, boolean isAvailable)
  {
-    this.name = name;
-    this.buyPrice = buyPrice;
-    this.sellPrice = sellPrice;
-    this.quantity = quantity;
-    this.isAvailable = isAvailable;
+    setName(name);
+    setBuyPrice(buyPrice);
+    setSellPrice(sellPrice);
+    setQuantity(quantity);
+    setAvailable(isAvailable);
 }
 public Product(int id, String name, double buyPrice, double sellPrice, int quantity, boolean isAvailable) {
     this(name, buyPrice, sellPrice, quantity, isAvailable);
-    this.id = id;
+    setId(id);
 }
 
 
