@@ -6,6 +6,7 @@ import SariSariStore.model.Product;
 import SariSariStore.model.SaleItem;
 import SariSariStore.service.InventoryService;
 import SariSariStore.service.SalesService;
+import SariSariStore.util.DatabaseInitializer;
 
 import java.util.ArrayList;
 
@@ -23,6 +24,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        DatabaseInitializer.initialize();
+
         InventoryService inventory = new InventoryService();
         SalesService sales = new SalesService();
 

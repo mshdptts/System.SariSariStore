@@ -18,6 +18,8 @@ SariSariStore/
 │   ├── ProductPanel.java
 │   └── SalesDialog.java
 └── util/
+    ├── DatabaseInitializer.java
+    ├── DBConnection.java
     └── MoneyFormatter.java [optional]
 ```
 ### Main
@@ -37,10 +39,12 @@ SariSariStore/
 - **`SalesDialog.java`**: Pop-up for recording a sale.
 
 ### util/
+- **`DatabaseInitializer.java`**: Creates the database and any missing tables at startup.
 - **`MoneyFormatter.java`** *(optional)*: Formats prices as pesos (e.g., ₱1,250.00).
 
 ### ADDED DATA BASE!!!!
 - This project now utilises MYSQL to manage multiple data base for sales and product items 
+- **`SariSariStore/schema.sql`**: Defines the tables created automatically at startup.
 
 ## Testing
 

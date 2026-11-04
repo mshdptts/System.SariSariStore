@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    buy_price DOUBLE NOT NULL,
+    sell_price DOUBLE NOT NULL,
+    quantity INT NOT NULL,
+    is_available BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    total DOUBLE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sale_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DOUBLE NOT NULL
+);
