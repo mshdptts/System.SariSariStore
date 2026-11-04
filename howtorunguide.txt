@@ -1,0 +1,131 @@
+I’ll verify the project’s actual folder and dependency layout so the guide matches how this repository is compiled and run.
+
+Find files matching `**/*`
+
+Read , lines 1 to 140
+Completed with input: {
+  "path": "D:\\sarisari_store_ni_ralph\\README.md",
+  "view_range": [
+    1,
+    140
+  ]
+}
+
+Read , lines 1 to 100
+Completed with input: {
+  "path": "D:\\sarisari_store_ni_ralph\\SariSariStore\\util\\DBConnection.java",
+  "view_range": [
+    1,
+    100
+  ]
+}
+
+## Steps for another person to run the program
+
+### 1. Install the requirements
+
+They need:
+
+- Java JDK installed
+- MySQL or Laragon installed
+- MySQL server running
+- The complete project folder
+
+The project already includes the required JAR files in `lib/`:
+
+- MySQL Connector/J
+- FlatLaf
+
+### 2. Copy the project
+
+Send the entire project folder, preserving this structure:
+
+```text
+sarisari_store_ni_ralph/
+├── lib/
+├── SariSariStore/
+│   ├── Main.java
+│   ├── schema.sql
+│   ├── model/
+│   ├── service/
+│   ├── gui/
+│   └── util/
+└── tests/
+```
+
+The `schema.sql` file must remain inside the `SariSariStore` folder.
+
+### 3. Start MySQL
+
+Using Laragon:
+
+1. Open Laragon.
+2. Click **Start All**, or start MySQL.
+3. Confirm MySQL is running on port `3306`.
+
+They do **not** need to manually create the database or run the SQL file.
+
+### 4. Check the MySQL credentials
+
+Open `DBConnection.java`.
+
+The current settings are:
+
+```java
+Host: localhost
+Port: 3306
+Username: root
+Password: empty
+```
+
+If their MySQL password is different, update:
+
+```java
+private static final String PASSWORD = "their_password";
+```
+
+If their server uses another port, update both connection URLs.
+
+### 5. Open PowerShell in the project root
+
+For example:
+
+```powershell
+cd D:\path\to\sarisari_store_ni_ralph
+```
+
+### 6. Compile the application
+
+```powershell
+$out = Join-Path $env:TEMP "sarisari-app"
+New-Item -ItemType Directory -Force $out
+javac -cp "lib/*" -d $out (Get-ChildItem -Recurse -Filter *.java SariSariStore | Select-Object -ExpandProperty FullName)
+```
+
+### 7. Run the application
+
+Run this from the project root so the initializer can find `schema.sql`:
+
+```powershell
+java -cp "$out;lib/*" SariSariStore.Main
+```
+
+At startup, the program will:
+
+1. Connect to MySQL.
+2. Create `sarisari_store` if it does not exist.
+3. Create missing tables.
+4. Preserve existing data.
+5. Start using the services.
+
+### 8. If there is an error
+
+Common causes:
+
+- MySQL is not running.
+- The username or password is incorrect.
+- MySQL is using a different port.
+- The project was run from the wrong folder.
+- `schema.sql` was moved or renamed.
+
+They do not need to open HeidiSQL unless they want to inspect the generated database and tables.
