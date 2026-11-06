@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -19,6 +20,7 @@ public final class DatabaseInitializer {
         try {
             createDatabase();
             executeSchema(loadSchema());
+            ensureSoldAtColumn();
         } catch (IOException | SQLException e) {
             throw new IllegalStateException("Could not initialize the database: " + e.getMessage(), e);
         }
@@ -40,6 +42,29 @@ public final class DatabaseInitializer {
                     statement.executeUpdate(trimmedSql);
                 }
             }
+        }
+    }
+
+    private static void ensureSoldAtColumn() throws SQLException {
+        try (Connection connection = DBConnection.getConnection();
+             ResultSet columns = connection.getMetaData().getColumns(null, null, "sales", "sold_at")) {
+            if (columns.next()) {
+                return;
+            }
+        }
+
+        try (Connection connection = DBConnection.getConnection();
+             Statement statement = connection.createStatement()) {
+            try (ResultSet legacyColumn = connection.getMetaData()
+                    .getColumns(null, null, "sales", "sale_date")) {
+                if (legacyColumn.next()) {
+                    statement.executeUpdate("ALTER TABLE sales CHANGE COLUMN sale_date sold_at DATETIME "
+                            + "NOT NULL DEFAULT CURRENT_TIMESTAMP");
+                    return;
+                }
+            }
+            statement.executeUpdate("ALTER TABLE sales ADD COLUMN sold_at DATETIME "
+                    + "NOT NULL DEFAULT CURRENT_TIMESTAMP");
         }
     }
 

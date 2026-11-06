@@ -2,6 +2,7 @@ package tests;
 
 import SariSariStore.model.Product;
 import SariSariStore.model.SaleItem;
+import SariSariStore.model.SaleReport;
 import SariSariStore.service.InventoryService;
 import SariSariStore.service.ReportService;
 import SariSariStore.service.SalesService;
@@ -13,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,6 +158,15 @@ public final class FeatureTests {
                 "Sale reduces stock");
         checkEquals(30.0, readSaleTotal(saleId), "Sale total");
         checkEquals(1, countSaleItems(saleId), "Sale item count");
+        ReportService reports = new ReportService();
+        List<SaleReport> dailySales = reports.getDailySalesReport(LocalDate.now().toString());
+        check(dailySales.stream().anyMatch(sale -> sale.getId() == saleId),
+                "Daily sales report includes recorded sale");
+        SaleReport report = dailySales.stream()
+                .filter(sale -> sale.getId() == saleId)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Recorded sale missing from daily report"));
+        checkEquals(30.0, report.getTotalAmount(), "Daily sales report total");
         System.out.printf("Recorded sale: receipt=%d, items=%d, total=PHP %.2f, remaining stock=%d%n",
                 saleId, countSaleItems(saleId), readSaleTotal(saleId),
                 inventory.findProductByName(available.getName()).getQuantity());
@@ -266,6 +277,7 @@ public final class FeatureTests {
                     + "is_available BOOLEAN NOT NULL)");
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS sales ("
                     + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "sold_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                     + "total DOUBLE NOT NULL)");
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS sale_items ("
                     + "id INT AUTO_INCREMENT PRIMARY KEY, "
