@@ -1,6 +1,7 @@
 package SariSariStore.service;
 
 import SariSariStore.model.Product;
+import SariSariStore.model.SaleReport;
 import SariSariStore.util.DBConnection;
 
 
@@ -8,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 
@@ -45,6 +47,8 @@ public class ReportService {
             rs.getBoolean("is_available"));
 }
 
+
+
     public ArrayList<Product> getOutofStockProducts() {
         ArrayList<Product> products = new ArrayList<>();
 
@@ -81,10 +85,19 @@ public class ReportService {
         return products;
     }
 
-    public ArrayList<Product> getDailySalesReport(String date) {
-        ArrayList<Product> products = new ArrayList<>();
+    private SaleReport mapSaleRow(ResultSet rs) throws SQLException {
+        java.sql.Timestamp soldAt = rs.getTimestamp("sold_at");
+        LocalDateTime reportSoldAt = soldAt == null ? null : soldAt.toLocalDateTime();
+        return new SaleReport(
+                rs.getInt("id"),
+                reportSoldAt,
+                rs.getDouble("total"));
+    }
 
-        String sql = "SELECT * FROM sales WHERE DATE(sale_date) = ?";
+    public ArrayList<SaleReport> getDailySalesReport(String date) {
+        ArrayList<SaleReport> sales = new ArrayList<>();
+
+        String sql = "SELECT * FROM sales WHERE DATE(sold_at) = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -92,20 +105,20 @@ public class ReportService {
             ps.setString(1, date);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    products.add(mapRow(rs));
+                    sales.add(mapSaleRow(rs));
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Could not retrieve daily sales report: " + e.getMessage(), e);
         }
 
-        return products;
+        return sales;
     }
 
-    public ArrayList<Product> getSalesReport(String startDate, String endDate){
-        ArrayList<Product> products = new ArrayList<>();
+    public ArrayList<SaleReport> getSalesReport(String startDate, String endDate){
+        ArrayList<SaleReport> sales = new ArrayList<>();
 
-        String sql = "SELECT * FROM sales WHERE DATE(sale_date) BETWEEN ? AND ?";
+        String sql = "SELECT * FROM sales WHERE DATE(sold_at) BETWEEN ? AND ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -114,13 +127,13 @@ public class ReportService {
             ps.setString(2, endDate);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    products.add(mapRow(rs));
+                    sales.add(mapSaleRow(rs));
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Could not retrieve sales report: " + e.getMessage(), e);
         }
-        return products;
+        return sales;
     }
 
 
