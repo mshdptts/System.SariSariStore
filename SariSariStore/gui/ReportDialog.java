@@ -1,120 +1,38 @@
-package SariSariStore.service;
+package SariSariStore.gui;
 
 import SariSariStore.model.Product;
-import SariSariStore.model.SaleRecord;
-import SariSariStore.util.DBConnection;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
 
-public class ReportService {
-
-    public ArrayList<Product> getLowStockProducts(int treshold) {
-        ArrayList<Product> products = new ArrayList<>();
-
-        String sql = "SELECT * FROM products WHERE quantity < ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, treshold);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    products.add(mapProductRow(rs));
-                }
+public final class ReportDialog extends JDialog {
+    private ReportDialog(Window owner, String title, List<Product> products) {
+        super(owner, title, ModalityType.APPLICATION_MODAL);
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"ID", "Name", "Price", "Stock"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve low stock products: " + e.getMessage(), e);
+        };
+        for (Product product : products) {
+            model.addRow(new Object[]{product.getId(), product.getName(),
+                    product.getSellPrice(), product.getQuantity()});
         }
-
-        return products;
+        add(new JScrollPane(new JTable(model)), BorderLayout.CENTER);
+        JButton close = new JButton("Close");
+        close.addActionListener(e -> dispose());
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footer.add(close);
+        add(footer, BorderLayout.SOUTH);
+        setSize(560, 420);
+        setLocationRelativeTo(owner);
     }
 
-    public ArrayList<Product> getOutofStockProducts() {
-        ArrayList<Product> products = new ArrayList<>();
-
-        String sql = "SELECT * FROM products WHERE quantity = 0";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                products.add(mapProductRow(rs));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve out of stock products: " + e.getMessage(), e);
-        }
-
-        return products;
-    }
-
-    public ArrayList<Product> getInventorySummary() {
-        ArrayList<Product> products = new ArrayList<>();
-
-        String sql = "SELECT * FROM products";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                products.add(mapProductRow(rs));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve inventory summary: " + e.getMessage(), e);
-        }
-        return products;
-    }
-    public ArrayList<SaleRecord> getDailySalesReport(String date) {
-        String sql = "SELECT id, sale_date, total FROM sales "
-                   + "WHERE DATE(sale_date) = ? ORDER BY sale_date";
-        return querySales(sql, date);
-    }
-    
-    public ArrayList<SaleRecord> getSalesReport(String startDate, String endDate) {
-        String sql = "SELECT id, sale_date, total FROM sales "
-                   + "WHERE DATE(sale_date) BETWEEN ? AND ? ORDER BY sale_date";
-        return querySales(sql, startDate, endDate);
-    }
-
-    private ArrayList<SaleRecord> querySales(String sql, String... dates) {
-        ArrayList<SaleRecord> sales = new ArrayList<>();
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            for (int i = 0; i < dates.length; i++) {
-                ps.setString(i + 1, dates[i]);
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    sales.add(mapSaleRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve sales report: " + e.getMessage(), e);
-        }
-        return sales;
-    }
-
-    private Product mapProductRow(ResultSet rs) throws SQLException {
-        return new Product(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getDouble("buy_price"),
-                rs.getDouble("sell_price"),
-                rs.getInt("quantity"),
-                rs.getBoolean("is_available"));
-    }
-
-    private SaleRecord mapSaleRow(ResultSet rs) throws SQLException {
-        return new SaleRecord(
-                rs.getInt("id"),
-                rs.getTimestamp("sale_date"),
-                rs.getDouble("total"));
+    public static ReportDialog forProducts(Window owner, String title,
+                                           List<Product> products) {
+        return new ReportDialog(owner, title, products);
     }
 }

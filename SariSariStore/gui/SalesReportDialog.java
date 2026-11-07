@@ -1,6 +1,6 @@
 package SariSariStore.gui;
 
-import SariSariStore.model.SaleRecord;
+import SariSariStore.model.SaleReport;
 import SariSariStore.service.ReportService;
 import SariSariStore.util.MoneyFormatter;
 
@@ -100,7 +100,7 @@ public class SalesReportDialog extends JDialog {
     private void loadReport() {
         try {
             String from = readDate(fromSpinner);
-            ArrayList<SaleRecord> sales;
+            ArrayList<SaleReport> sales;
 
             if (dailyMode) {
                 sales = reports.getDailySalesReport(from);
@@ -119,18 +119,18 @@ public class SalesReportDialog extends JDialog {
         }
     }
 
-    private void showSales(ArrayList<SaleRecord> sales) {
+    private void showSales(ArrayList<SaleReport> sales) {
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_PATTERN);
         double grandTotal = 0;
 
         tableModel.setRowCount(0);
-        for (SaleRecord sale : sales) {
+        for (SaleReport sale : sales) {
             tableModel.addRow(new Object[] {
                     sale.getId(),
-                    dateTimeFormat.format(sale.getSaleDate()),
-                    MoneyFormatter.format(sale.getTotal())
+                    dateTimeFormat.format(java.sql.Timestamp.valueOf(sale.getSoldAt())),
+                    MoneyFormatter.format(sale.getTotalAmount())
             });
-            grandTotal += sale.getTotal();
+            grandTotal += sale.getTotalAmount();
         }
 
         summaryLabel.setText(sales.size() + " sale(s)  |  Total: " + MoneyFormatter.format(grandTotal));

@@ -1,6 +1,6 @@
 package SariSariStore.gui;
 
-import SariSariStore.model.SaleRecord;
+import SariSariStore.model.SaleReport;
 import SariSariStore.service.ReportService;
 import SariSariStore.util.MoneyFormatter;
 
@@ -86,11 +86,11 @@ public class DashboardDialog extends JDialog {
     private void loadSalesCards() {
         try {
             String today = LocalDate.now().toString(); // yyyy-MM-dd
-            ArrayList<SaleRecord> todaysSales = reports.getDailySalesReport(today);
+            ArrayList<SaleReport> todaysSales = reports.getDailySalesReport(today);
 
             double total = 0;
-            for (SaleRecord sale : todaysSales) {
-                total += sale.getTotal();
+            for (SaleReport sale : todaysSales) {
+                total += sale.getTotalAmount();
             }
             todaySalesValue.setText(MoneyFormatter.format(total));
             salesCountValue.setText(String.valueOf(todaysSales.size()));

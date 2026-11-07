@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 
@@ -85,15 +84,6 @@ public class ReportService {
         return products;
     }
 
-    private SaleReport mapSaleRow(ResultSet rs) throws SQLException {
-        java.sql.Timestamp soldAt = rs.getTimestamp("sold_at");
-        LocalDateTime reportSoldAt = soldAt == null ? null : soldAt.toLocalDateTime();
-        return new SaleReport(
-                rs.getInt("id"),
-                reportSoldAt,
-                rs.getDouble("total"));
-    }
-
     public ArrayList<SaleReport> getDailySalesReport(String date) {
         ArrayList<SaleReport> sales = new ArrayList<>();
 
@@ -113,6 +103,13 @@ public class ReportService {
         }
 
         return sales;
+    }
+
+    private SaleReport mapSaleRow(ResultSet rs) throws SQLException {
+        java.sql.Timestamp timestamp = rs.getTimestamp("sold_at");
+        return new SaleReport(rs.getInt("id"),
+                timestamp == null ? null : timestamp.toLocalDateTime(),
+                rs.getDouble("total"));
     }
 
     public ArrayList<SaleReport> getSalesReport(String startDate, String endDate){
