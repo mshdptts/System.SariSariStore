@@ -69,6 +69,7 @@ public class ProductPanel extends JPanel {
 
         table.setRowHeight(36);
         table.setAutoCreateRowSorter(true);
+        table.setDefaultRenderer(Object.class, new ProductCellRenderer());
         JScrollPane tableScroll = new JScrollPane(table);
         tableScroll.setBorder(BorderFactory.createEmptyBorder());
         JPanel left = Theme.card(new BorderLayout(8, 8));
@@ -134,12 +135,38 @@ public class ProductPanel extends JPanel {
                     || (!"All".equals(selectedStatus) && !selectedStatus.equals(productStatus))) {
                 continue;
             }
+
             model.addRow(new Object[]{product.getId(), product.getName(),
                     String.format("%.2f", product.getSellPrice()), product.getQuantity(),
                     productStatus});
             shown++;
         }
         showing.setText("Showing " + shown + " of " + allProducts.size() + " products");
+    }
+
+    private static final class ProductCellRenderer extends
+            javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                        boolean selected, boolean focused,
+                                                        int row, int column) {
+            Component cell = super.getTableCellRendererComponent(
+                    table, value, selected, focused, row, column);
+            if (!selected) {
+                Object status = table.getValueAt(row, 4);
+                if ("Out of stock".equals(status)) {
+                    cell.setBackground(Theme.DANGER);
+                    cell.setForeground(Color.WHITE);
+                } else if ("Low".equals(status)) {
+                    cell.setBackground(Theme.LOW_STOCK);
+                    cell.setForeground(Theme.TEXT);
+                } else {
+                    cell.setBackground(Color.WHITE);
+                    cell.setForeground(Theme.TEXT);
+                }
+            }
+            return cell;
+        }
     }
 
     private void selectRow() {

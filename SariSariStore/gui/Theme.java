@@ -15,6 +15,7 @@ public final class Theme {
     public static final Color MUTED = new Color(105, 121, 115);
     public static final Color WARNING = new Color(225, 133, 34);
     public static final Color DANGER = new Color(207, 63, 63);
+    public static final Color LOW_STOCK = new Color(255, 235, 120);
 
     private Theme() {
     }
@@ -63,6 +64,7 @@ public final class Theme {
     public static JButton secondary(String text) {
         JButton button = new JButton(text);
         button.putClientProperty("JButton.buttonType", "roundRect");
+        button.setForeground(TEXT);
         return button;
     }
 

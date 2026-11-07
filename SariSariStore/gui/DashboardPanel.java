@@ -110,12 +110,12 @@ public class DashboardPanel extends JPanel {
         outCount.setText(String.valueOf(out.size()));
         StringBuilder html = new StringBuilder("<html>");
         for (Product product : out) {
-            html.append("<font color='#CF3F3F'>Out of stock</font> ")
+            html.append("<font color='#CF3F3F'><b>Out of stock</b></font> ")
                     .append(product.getName()).append(" &nbsp; 0 pcs<br>");
         }
         for (Product product : low) {
             if (product.getQuantity() > 0) {
-                html.append("<font color='#E18522'>Low stock</font> ")
+                html.append("<font color='#B88600'><b>Low stock</b></font> ")
                         .append(product.getName()).append(" &nbsp; ")
                         .append(product.getQuantity()).append(" pcs<br>");
             }

@@ -96,7 +96,7 @@ public class MainFrame extends JFrame {
 
     private void addNavigationButton(JPanel navigation, String name) {
         JButton button = Theme.secondary(name);
-        button.setForeground(Color.WHITE);
+        button.setForeground(Color.BLACK);
         button.setOpaque(false);
         button.addActionListener(e -> switchTo(name));
         navigation.add(button);

@@ -90,8 +90,22 @@ public class SalesPanel extends JPanel {
                     + product.getQuantity() + " pcs</html>");
             card.setHorizontalAlignment(SwingConstants.LEFT);
             card.setPreferredSize(new Dimension(150, 72));
-            card.setEnabled(product.isAvailable() && product.getQuantity() > 0);
-            card.addActionListener(e -> addToCart(product));
+            if (product.getQuantity() == 0 || !product.isAvailable()) {
+                card.setBackground(Theme.DANGER);
+                card.setForeground(Color.WHITE);
+            } else if (product.getQuantity() < 5) {
+                card.setBackground(Theme.LOW_STOCK);
+                card.setForeground(Theme.TEXT);
+            } else {
+                card.setBackground(Color.WHITE);
+                card.setForeground(Theme.TEXT);
+            }
+            card.setOpaque(true);
+            card.addActionListener(e -> {
+                if (product.isAvailable() && product.getQuantity() > 0) {
+                    addToCart(product);
+                }
+            });
             productGrid.add(card);
         }
         productGrid.revalidate();
