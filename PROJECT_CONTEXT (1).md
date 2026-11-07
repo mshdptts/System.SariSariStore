@@ -2,7 +2,7 @@
 
 > **Purpose:** a structured map of this Java project: what every file and class does, every public function, and how the parts connect (code dependencies, database tables, data flow). Written so an AI model can load it as context before reading or changing the code.
 >
-> **Snapshot described:** git branch `withDB`, last commit `abfed65` (2026-10-31, message: "finalized back end [sales report, feature tests], gui to be added]"). The working tree equals that commit except for CRLF line endings.
+> **Snapshot described:** This document is maintained against the current working tree. The GUI has been rebuilt since the original `withDB` backend snapshot; verify current source files before making changes.
 >
 > **How it was checked:** every fact comes from reading the source. The project compiles cleanly on OpenJDK 21 (`javac -Xlint:all`, zero warnings). The DB-free parts of `tests/FeatureTests.java` (model validation, `MoneyFormatter`) were executed and pass. Everything that touches MySQL was **not executed** (no server available), so those claims are labelled **(code-derived)**, and the database schema is labelled **(inferred)**.
 >
@@ -24,7 +24,7 @@
 | Architecture | Layered: `gui` → `service` (business logic **and** all SQL) → `model` + `util` → MySQL |
 | Entry points | `SariSariStore.Main#main` (FlatLaf Swing launcher) and `tests.FeatureTests#main` (test runner) |
 | Tests | One framework-free runner (`tests/FeatureTests.java`, no JUnit). Needs a live MySQL. |
-| Size | 11 app files (≈600 lines; 2 of them are empty files, 1 is an empty class) + 1 test file (370 lines) |
+| Size | Java application with Swing GUI panels/dialogs, backend services, models, utilities, and one framework-free test runner |
 | Origin | GitHub `mshdptts/System.SariSariStore` (remote `origin`); 24 commits, 2026-10-19 to 2026-10-31 |
 | Dev environment clues | Windows (CRLF line endings, PowerShell commands in README), VS Code (git config), Laragon MySQL (comment in `DBConnection`) |
 
@@ -38,14 +38,23 @@
 | `service.InventoryService` | IMPLEMENTED, tested | add / update / remove / find by name / restock |
 | `service.SalesService` | IMPLEMENTED, tested | transactional multi-item sale with stock checks and rollback |
 | `service.ReportService`: stock reports | IMPLEMENTED, tested | low stock, out of stock, full inventory |
-| `service.ReportService`: sales reports | **BROKEN, untested** | `getDailySalesReport`, `getSalesReport` (§9, issue 1) |
+| `service.ReportService`: sales reports | IMPLEMENTED | Returns `ArrayList<SaleReport>` for daily and date-range reports |
 | `service.ReportService`: best-selling products | NOT STARTED | only a commented-out idea at `ReportService.java:127-129` |
 | `util.DBConnection` | IMPLEMENTED | hard-coded local MySQL settings |
 | `util.MoneyFormatter` | IMPLEMENTED | called only by tests so far |
-| `gui.MainFrame` | STUB | `public class MainFrame { }`: not even a `JFrame` |
-| `gui.ProductPanel`, `gui.SalesDialog` | EMPTY FILE | 0 bytes |
-| `Main` | DEMO SCRIPT | writes to the real database on every run |
-| Database schema script | NOT IN REPO (optional) | tables already exist in the author's local MySQL; `DBConnection` holds connection settings only; a minimal copy of the DDL is in `FeatureTests` |
+| `gui.MainFrame` | IMPLEMENTED | Swing window with toolbar/navigation and report/product/sales dialogs |
+| `gui.ProductPanel` | IMPLEMENTED | Product search/filtering, CRUD, restocking, colored stock statuses, and the Jerry easter egg |
+| `gui.SalesDialog` | IMPLEMENTED | Records sales through the transactional sales service |
+| `Main` | GUI LAUNCHER | Initializes the database, installs FlatLaf, and opens `MainFrame` |
+| Database schema script | PRESENT | `SariSariStore/schema.sql` defines products, sales, and sale-items tables |
+
+### Current GUI behavior
+
+- `Main` installs `FlatLightLaf`, initializes the database, and launches the Swing UI on the EDT.
+- `MainFrame` provides the header, clock, toolbar/navigation, reports menu, and product-management workspace.
+- Product status colors are intentional: out-of-stock rows/cards are red with white text; low-stock rows/cards are yellow with dark text. The low-stock threshold is quantity below 5 in the rebuilt product/sales panels and below 10 in the legacy dashboard dialog.
+- Product search supports the `jerry` easter egg. When the trimmed search value equals `jerry` (case-insensitive), `SariSariStore/img/jerryface.jpg` opens in a modeless popup once until the search text changes.
+- The backend still does not persist categories, payment/change values, sale status/voiding, or receipt image data.
 
 ---
 
@@ -53,13 +62,13 @@
 
 ```text
 sarisari_store_ni_ralph/              <- repo root = Java source root = classpath root
-├── README.md                         human-written overview (partly outdated, see §9.3)
+├── README.md                         human-written overview
 ├── .gitignore                        ignores out/ and *.class
 ├── lib/
 │   ├── mysql-connector-j-26.10.0.jar   MySQL Connector/J 26.10.0 (JDBC driver)
-│   └── flatlaf-3.7.2.jar               FlatLaf 3.7.2 (Swing look-and-feel; unused so far)
+│   └── flatlaf-3.7.2.jar               FlatLaf 3.7.2 (Swing look-and-feel)
 ├── SariSariStore/                    root package `SariSariStore`
-│   ├── Main.java                     console demo / smoke test
+│   ├── Main.java                     database initialization and Swing launcher
 │   ├── model/
 │   │   ├── Product.java              store item entity (mutable)
 │   │   └── SaleItem.java             one cart line: productId + quantity (immutable)
@@ -71,9 +80,15 @@ sarisari_store_ni_ralph/              <- repo root = Java source root = classpat
 │   │   ├── DBConnection.java         JDBC connection factory
 │   │   └── MoneyFormatter.java       Philippine peso formatting
 │   └── gui/
-│       ├── MainFrame.java            empty class
-│       ├── ProductPanel.java         EMPTY FILE (0 bytes)
-│       └── SalesDialog.java          EMPTY FILE (0 bytes)
+│       ├── MainFrame.java            main window and toolbar/navigation
+│       ├── ProductPanel.java         product management and Jerry easter egg
+│       ├── SalesDialog.java          sale recording dialog
+│       ├── DashboardDialog.java      inventory and sales summary
+│       ├── ReportDialog.java         product report dialog
+│       ├── RestockDialog.java        stock replenishment dialog
+│       └── SalesReportDialog.java    daily/date-range sales report dialog
+├── SariSariStore/img/
+│   └── jerryface.jpg                 image shown by the product-search easter egg
 └── tests/
     └── FeatureTests.java             package `tests`; framework-free test runner (370 lines)
 ```
@@ -85,11 +100,11 @@ sarisari_store_ni_ralph/              <- repo root = Java source root = classpat
 ### 4.1 Layers
 
 ```text
-gui/*  (planned, empty)  ──calls──►  service/*  ──uses──►  model/*  (Product, SaleItem)
+gui/*  (Swing/FlatLaf UI)  ──calls──►  service/*  ──uses──►  model/*  (Product, SaleItem, SaleReport)
                                         │
                                         └──uses──►  util/DBConnection ──JDBC──► MySQL `sarisari_store`
 
-util/MoneyFormatter: display helper with no dependencies; currently called only by tests.
+util/MoneyFormatter: display helper used by the GUI and tests.
 ```
 
 The three services are **independent**: none calls another. Each opens its own JDBC connection and runs its own SQL. In particular `SalesService` does **not** use `InventoryService` or `Product`; it updates `products.quantity` with its own SQL inside its transaction.
@@ -98,14 +113,14 @@ The three services are **independent**: none calls another. Each opens its own J
 
 | Class | Uses (project classes) | Uses (external) |
 |---|---|---|
-| `Main` | `Product`, `SaleItem`, `InventoryService`, `SalesService` | `java.util.ArrayList` |
+| `Main` | `DatabaseInitializer`, `MainFrame`, `Theme` | `SwingUtilities`, FlatLaf |
 | `InventoryService` | `Product`, `DBConnection` | `java.sql.*` |
 | `SalesService` | `SaleItem`, `DBConnection` | `java.sql.*` |
-| `ReportService` | `Product`, `DBConnection` | `java.sql.*` |
+| `ReportService` | `Product`, `SaleReport`, `DBConnection` | `java.sql.*` |
 | `DBConnection` | none | `java.sql.*`; MySQL driver loaded at runtime via `DriverManager` |
 | `MoneyFormatter` | none | `java.text.NumberFormat`, `java.util.Locale` |
 | `Product`, `SaleItem` | none | none |
-| `MainFrame`, `ProductPanel`, `SalesDialog` | none | none (no `javax.swing`/FlatLaf imports anywhere) |
+| `MainFrame`, GUI panels/dialogs | services, models, utilities | `javax.swing`, `java.awt`, FlatLaf |
 | `tests.FeatureTests` | all of `Product`, `SaleItem`, the 3 services, `DBConnection`, `MoneyFormatter` | `java.sql.*`, `java.util.*` |
 
 Reverse view (who uses whom):
@@ -117,7 +132,7 @@ Reverse view (who uses whom):
 - `ReportService` ← `FeatureTests`
 - `DBConnection` ← `InventoryService`, `SalesService`, `ReportService`, `FeatureTests`
 - `MoneyFormatter` ← `FeatureTests` only
-- `MainFrame`, `ProductPanel`, `SalesDialog` ← nothing
+- `MainFrame` ← `Main`; `ProductPanel` ← `MainFrame`; `SalesDialog` ← `MainFrame`
 
 ### 4.3 Database access by class
 
@@ -162,7 +177,7 @@ Field ↔ column naming (camelCase ↔ snake_case): `buyPrice` ↔ `buy_price`, 
 
 ### 5.2 Database schema **(inferred)**
 
-There is no schema script in the repo (the database was created outside it, and the author does not need one because the tables already exist locally). `DBConnection` holds only connection settings and **no table definitions**. The only DDL in the repo is in `FeatureTests.prepareDatabase()` (`CREATE TABLE IF NOT EXISTS`):
+The repository includes `SariSariStore/schema.sql` for the products, sales, and sale-items tables. `DatabaseInitializer` applies the schema during application startup. `DBConnection` holds the connection settings:
 
 ```sql
 CREATE TABLE IF NOT EXISTS products (
@@ -364,15 +379,19 @@ Dates are `String`s bound with `setString` (format presumably `YYYY-MM-DD`, infe
 - **File:** `SariSariStore/util/MoneyFormatter.java`
 - **Role:** turns a `double` into a Philippine-peso string. Static utility; private constructor; holds one shared `NumberFormat` built with `Locale.forLanguageTag("en-PH")`.
 - **Method:** `public static String format(double amount)`. Example: `format(1234.5)` → `₱1,234.50`.
-- **Used by:** only `FeatureTests` at the moment. Intended for the future GUI. The README marks it "[optional]".
+- **Used by:** GUI dialogs/panels and `FeatureTests`.
 
-### 7.9 `SariSariStore.gui.*`  `[STUBS, nothing implemented]`
+### 7.9 `SariSariStore.gui.*`  `[IMPLEMENTED]`
 
-- `gui/MainFrame.java`: `public class MainFrame { }`. It does not extend `JFrame` and has no members.
-- `gui/ProductPanel.java`: 0-byte file (planned: screen for viewing and managing products).
-- `gui/SalesDialog.java`: 0-byte file (planned: pop-up for recording a sale).
-- No `javax.swing`, `java.awt` or `com.formdev.flatlaf` reference exists anywhere in the source. FlatLaf (`com.formdev.flatlaf.FlatLightLaf` / `FlatDarkLaf`) is present in `lib/` only.
-- Intended wiring when built (from README and git history): `MainFrame` hosts `ProductPanel`; `SalesDialog` records sales; all of them call the services.
+- `gui/MainFrame.java`: the main `JFrame`; builds the toolbar, Reports menu, product panel, dashboard, and modal sales/restock/report dialogs.
+- `gui/ProductPanel.java`: product table with name search, stock-status filtering, add/edit/delete, restocking, and red/yellow stock highlighting.
+- `gui/SalesDialog.java`: validates a selected product and quantity, then records a sale through `SalesService`.
+- `gui/DashboardDialog.java`: displays today's sales, product count, low-stock count, and out-of-stock count.
+- `gui/ReportDialog.java`: read-only product report table used by stock/inventory reports.
+- `gui/SalesReportDialog.java`: daily and date-range sales report dialog.
+- `gui/RestockDialog.java`: product restocking workflow.
+- `gui/Theme.java`: shared FlatLaf installation and UI colors/styles.
+- Typing `jerry` in the ProductPanel name search opens `SariSariStore/img/jerryface.jpg` once per typed occurrence. The image is a UI easter egg, not a business feature.
 
 ### 7.10 `tests.FeatureTests`  `[IMPLEMENTED]`
 
@@ -395,7 +414,7 @@ Dates are `String`s bound with `setString` (format presumably `YYYY-MM-DD`, infe
 | `testSalesFeatures` | sale total 30.0, 1 sale item, stock 10 → 8; over-stock → ISE and stock unchanged; unavailable → ISE; unknown id, `null`, empty list → IAE |
 | `testReportFeatures` | low-stock, out-of-stock and inventory-summary membership |
 
-- **Not covered by any test:** `getDailySalesReport`, `getSalesReport`, `Main`, the GUI.
+- **Not covered by any test:** `Main` and interactive GUI behavior.
 - **Helpers:** `check`, `checkEquals`, `expectThrows` (with private functional interface `ThrowingRunnable`), `itemsFor`, `hasProduct`, `readSaleTotal`, `countSaleItems`, `printReport`, `cleanupTestData` (deletes `sale_items` → `sales` → `products` for prefixed products), `placeholders`, `setIds`.
 
 ---
@@ -423,9 +442,9 @@ Dates are `String`s bound with `setString` (format presumably `YYYY-MM-DD`, infe
 
 | # | Severity | Where | Problem |
 |---|---|---|---|
-| 1 | **High** | `ReportService.getDailySalesReport`, `getSalesReport` (`ReportService.java:84-124`) | Both query the `sales` table but convert rows with the **product** `mapRow` (it reads `name`, `buy_price`, `sell_price`, `quantity`, `is_available`). A `sales` row has none of those columns, so any call that matches at least one sale should throw `SQLException: Column 'name' not found`, surfacing as `RuntimeException("Could not retrieve ... report")`; with zero matches it returns an empty list. The return type `ArrayList<Product>` cannot hold sale data (total, date, line items) anyway. The queries also need `sales.sale_date`, which is absent from the only DDL in the repo, so on a database created by `FeatureTests.prepareDatabase()` they fail with "Unknown column 'sale_date'". No test covers them. **(code-derived, not executed)** Fix direction: a sale/report result class, its own row mapper, and a guaranteed `sale_date` column. |
-| 2 | Medium | `SariSariStore/gui/*` | GUI not implemented: `MainFrame` is an empty class, `ProductPanel.java` and `SalesDialog.java` are 0 bytes, FlatLaf is unused. |
-| 3 | Medium | `Main.java` | It is a demo script with database side effects (inserts products, records a new sale on every run), but the README says it "starts the app and opens the main window". |
+| 1 | Medium | `Main` / GUI | Database access is performed synchronously from Swing event handlers, so a slow or unavailable MySQL connection can make the UI appear unresponsive. |
+| 2 | Medium | `SariSariStore.gui.*` | GUI behavior is not covered by automated tests; verify dialogs, colors, keyboard input, and database-backed flows manually. |
+| 3 | Low | database | Database credentials remain hard-coded for the local development setup. |
 | 4 | Low | database | No schema script in the repo. Not needed on the author's machine (the tables already exist), and `DBConnection` holds connection settings only, not table definitions. It matters only when setting up a fresh database: the real DDL (notably `sales.sale_date`) is unknown, no foreign keys or unique constraints are declared, and `sarisari_store` must be created by hand. |
 | 5 | Low | `Product` | Constructors skip validation (only setters validate), so invalid objects can be created. `setName` accepts null or empty. |
 | 6 | Low | `InventoryService.findProductByName`, `restockProduct` | Name is used as a key but is not unique in the schema: `find` returns the first match, `restock` updates all rows with that name. |
@@ -437,11 +456,11 @@ Dates are `String`s bound with `setString` (format presumably `YYYY-MM-DD`, infe
 
 ### 9.2 Not built yet / missing
 
-- The GUI: `MainFrame` (window), `ProductPanel` (view and manage products), `SalesDialog` (record a sale). Evidence: README and the last commit message "gui to be added".
+- Automated GUI tests and non-blocking/background database loading are not implemented.
 - `ReportService.getBestSellingProducts(startDate, endDate)`: only a commented-out idea.
 - A working sales report (issue 1).
 - A refactor of `SalesService` (commit `e2b3cc1`: "[still to be refactored]").
-- No build file, no external configuration for DB credentials, no unit-test framework, and no schema script (optional: the author's database already exists).
+- No build file, no external configuration for DB credentials, or unit-test framework. The schema is maintained in `SariSariStore/schema.sql`.
 
 ### 9.3 README vs. reality
 
@@ -450,7 +469,7 @@ Dates are `String`s bound with `setString` (format presumably `YYYY-MM-DD`, infe
 | `Main.java`: "Starts the app and opens the main window." | Console demo; no GUI. |
 | Structure lists `model/Product.java` only | `model/SaleItem.java` also exists (required by `SalesService`). |
 | Structure lists `util/MoneyFormatter.java [optional]` only | `util/DBConnection.java` also exists and is required by every service. |
-| `ReportService`: "reports like daily sales and low-stock alerts" | Low-stock works; the daily/range sales reports are broken (issue 1). |
+| `ReportService`: "reports like daily sales and low-stock alerts" | Stock and daily/date-range sales reports are implemented; interactive GUI coverage is manual. |
 | `gui/` files listed as part of the structure | Stub / empty files. |
 | "ADDED DATA BASE!!!! … MYSQL" | True; the tables live in the author's local MySQL rather than in the repo. |
 
@@ -518,7 +537,6 @@ Where to make common changes:
 | Task | Where and how |
 |---|---|
 | Add a database feature | Add a method to the matching service following §8 (PreparedStatement, try-with-resources, wrap `SQLException`). Add tests to `FeatureTests` and extend `cleanupTestData()` if it writes new data. |
-| Build the GUI | Create the Swing classes in `SariSariStore/gui/`. Call only the services (never JDBC directly). Format prices with `MoneyFormatter.format`. FlatLaf is already in `lib/` (`com.formdev.flatlaf.FlatLightLaf`). Service calls are blocking JDBC calls. Replace or supplement the demo `Main` with a real launcher. |
 | Fix the sales reports | Add a result type for sales (the current `ArrayList<Product>` cannot carry sale data), write a separate row mapper, and make sure `sales.sale_date` exists (§5.2, §9 issue 1). Add a test. |
 | Implement "best-selling products" | Would join `sale_items` with `products` and group by product within a date range (idea left as a comment in `ReportService`). |
 | Change DB settings | Constants in `util/DBConnection.java`. |

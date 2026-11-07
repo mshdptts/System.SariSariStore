@@ -6,6 +6,7 @@ import SariSariStore.service.InventoryService;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 
 public class ProductPanel extends JPanel {
@@ -27,6 +28,7 @@ public class ProductPanel extends JPanel {
     private final JTextField quantity = new JTextField();
     private Product selected;
     private ArrayList<Product> allProducts = new ArrayList<>();
+    private boolean easterEggShown;
 
     public ProductPanel(InventoryService inventory, Runnable onChange) {
         this.inventory = inventory;
@@ -35,7 +37,10 @@ public class ProductPanel extends JPanel {
         setBackground(Theme.PAGE);
         setBorder(BorderFactory.createEmptyBorder(24, 24, 16, 24));
         build();
-        search.getDocument().addDocumentListener((SimpleDocumentListener) e -> filter());
+        search.getDocument().addDocumentListener((SimpleDocumentListener) e -> {
+            filter();
+            checkEasterEgg();
+        });
         status.addActionListener(e -> filter());
         table.getSelectionModel().addListSelectionListener(e -> selectRow());
         refreshProducts();
@@ -142,6 +147,41 @@ public class ProductPanel extends JPanel {
             shown++;
         }
         showing.setText("Showing " + shown + " of " + allProducts.size() + " products");
+    }
+
+    private void checkEasterEgg() {
+        boolean jerryTyped = "jerry".equalsIgnoreCase(search.getText().trim());
+        if (!jerryTyped) {
+            easterEggShown = false;
+        } else if (!easterEggShown) {
+            easterEggShown = true;
+            SwingUtilities.invokeLater(this::showJerryPhoto);
+        }
+    }
+
+    private void showJerryPhoto() {
+        File imageFile = new File("SariSariStore" + File.separator + "img"
+                + File.separator + "jerryface.jpg");
+        if (!imageFile.isFile()) {
+            imageFile = new File("img" + File.separator + "jerryface.jpg");
+        }
+        if (!imageFile.isFile()) {
+            JOptionPane.showMessageDialog(this,
+                    "The Jerry photo could not be found.",
+                    "Easter Egg Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+        JLabel photo = new JLabel(icon);
+        photo.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        JDialog dialog = new JDialog(
+                SwingUtilities.getWindowAncestor(this), "Jerry!", Dialog.ModalityType.MODELESS);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.add(photo);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private static final class ProductCellRenderer extends
