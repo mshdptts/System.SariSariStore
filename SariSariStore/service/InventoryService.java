@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 
 public class InventoryService {
@@ -23,6 +24,22 @@ public class InventoryService {
             rs.getBoolean("is_available")
         );
 
+    }
+
+    public ArrayList<Product> getProducts() {
+        ArrayList<Product> products = new ArrayList<>();
+        String sql = "SELECT * FROM products ORDER BY name";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                products.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not load products: " + e.getMessage(), e);
+        }
+        return products;
     }
 
 

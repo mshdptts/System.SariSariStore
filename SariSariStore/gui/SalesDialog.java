@@ -1,12 +1,14 @@
 package SariSariStore.gui;
 
 import SariSariStore.model.Product;
+import SariSariStore.model.SaleItem;
 import SariSariStore.service.InventoryService;
 import SariSariStore.service.SalesService;
 import SariSariStore.util.MoneyFormatter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 /** dialog for selecting a product and recording a sale. */
 public class SalesDialog extends JDialog {
@@ -27,13 +29,29 @@ public class SalesDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         loadAvailableProducts(inventory);
+        productBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Product) {
+                    Product product = (Product) value;
+                    setText(product.getName() + " (" + product.getQuantity() + " in stock)");
+                }
+                return this;
+            }
+        });
 
         add(buildFormPanel(), BorderLayout.CENTER);
         add(buildButtonPanel(), BorderLayout.SOUTH);
 
-        productBox.addActionListener(e -> updateTotal());
+        productBox.addActionListener(e -> {
+            updateQuantityLimit();
+            updateTotal();
+        });
         quantitySpinner.addChangeListener(e -> updateTotal());
 
+        updateQuantityLimit();
         updateTotal();
         pack();
         setMinimumSize(new Dimension(380, getHeight()));
@@ -92,6 +110,16 @@ public class SalesDialog extends JDialog {
         totalLabel.setText(MoneyFormatter.format(product.getSellPrice() * selectedQuantity()));
     }
 
+    private void updateQuantityLimit() {
+        Product product = (Product) productBox.getSelectedItem();
+        int maximum = product == null ? 1 : Math.max(1, product.getQuantity());
+        SpinnerNumberModel model = (SpinnerNumberModel) quantitySpinner.getModel();
+        model.setMaximum(maximum);
+        if (selectedQuantity() > maximum) {
+            model.setValue(maximum);
+        }
+    }
+
     private void completeSale() {
         try {
             Product product = (Product) productBox.getSelectedItem();
@@ -99,14 +127,19 @@ public class SalesDialog extends JDialog {
                 throw new IllegalArgumentException("There are no products in stock.");
             }
 
-            SalesService.Sale sale = sales.recordSale(product, selectedQuantity());
-            JOptionPane.showMessageDialog(this, "Sale recorded. Total: " + MoneyFormatter.format(sale.getTotal()));
+            int quantity = selectedQuantity();
+            double total = product.getSellPrice() * quantity;
+            ArrayList<SaleItem> items = new ArrayList<>();
+            items.add(new SaleItem(product.getId(), quantity));
+            int saleId = sales.recordSale(items);
+            JOptionPane.showMessageDialog(this, "Sale #" + saleId + " recorded. Total: "
+                    + MoneyFormatter.format(total));
 
             if (onSaleRecorded != null) {
                 onSaleRecorded.run();
             }
             dispose();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Sale Not Recorded", JOptionPane.ERROR_MESSAGE);
         }
     }

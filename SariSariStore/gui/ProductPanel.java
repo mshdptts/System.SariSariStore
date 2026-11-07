@@ -114,7 +114,7 @@ public class ProductPanel extends JPanel {
         tableModel.setRowCount(0);
         if (products != null) {
             for (Product p : products) {
-                Object[] rowData = {p.getName(), String.format("%.2f", p.getPrice()), p.getQuantity()};
+                Object[] rowData = {p.getName(), String.format("%.2f", p.getSellPrice()), p.getQuantity()};
                 tableModel.addRow(rowData);
             }
         }
@@ -152,7 +152,7 @@ public class ProductPanel extends JPanel {
                 return;
             }
 
-            Product newProduct = new Product(name, price, quantity);
+            Product newProduct = new Product(name, price, price, quantity, true);
             inventoryService.addProduct(newProduct);
 
             refreshTable(inventoryService.getProducts());
