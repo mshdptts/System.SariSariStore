@@ -14,7 +14,10 @@ import java.util.ArrayList;
 public class InventoryService {
 //database row to Prodauct object
 
-    private Product mapRow(ResultSet rs) throws SQLException {
+
+
+
+private Product mapRow(ResultSet rs) throws SQLException {
         return new Product(
             rs.getInt("id"),
             rs.getString("name"),
@@ -40,6 +43,32 @@ public class InventoryService {
             throw new RuntimeException("Could not load products: " + e.getMessage(), e);
         }
         return products;
+    }
+
+    public int getTotalProductCount() {
+        String sql = "SELECT COUNT(*) FROM products";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not count products: " + e.getMessage(), e);
+        }
+    }
+
+    public int getTotalUnitsInStock() {
+        String sql = "SELECT COALESCE(SUM(quantity), 0) FROM products";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not count units in stock: " + e.getMessage(), e);
+        }
     }
 
 

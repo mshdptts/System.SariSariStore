@@ -120,6 +120,9 @@ public class ProductPanel extends JPanel {
         }
     }
 
+    public void refreshProducts() {
+        refreshTable(inventoryService.getProducts());
+    }
     // Action: Search Product by Name
     private void searchProduct() {
         String query = txtSearch.getText().trim();
