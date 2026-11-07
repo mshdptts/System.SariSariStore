@@ -15,14 +15,14 @@
 | Item | Value |
 |---|---|
 | Project | Sari-Sari Store. A "sari-sari store" is a small neighborhood convenience shop in the Philippines. |
-| What it does | Back end for managing products, stock (inventory), sales (receipts) and stock reports. A Swing GUI is planned but **not built yet**. |
+| What it does | Desktop Swing application for managing products, stock (inventory), multi-item sales, and reports. |
 | Language | Java. Uses lambdas (Java 8+). Verified compiling on OpenJDK 21. |
 | Build tool | None (no Maven/Gradle). Plain `javac` with `lib/*` on the classpath. |
 | Database | MySQL, database `sarisari_store`, accessed with raw JDBC (`PreparedStatement`). No ORM. |
-| Libraries in `lib/` | `mysql-connector-j-26.10.0.jar` (JDBC driver, **used**, auto-registers `com.mysql.cj.jdbc.Driver`), `flatlaf-3.7.2.jar` (Swing look-and-feel, **not used yet**) |
+| Libraries in `lib/` | `mysql-connector-j-26.10.0.jar` (JDBC driver, **used**, auto-registers `com.mysql.cj.jdbc.Driver`), `flatlaf-3.7.2.jar` (FlatLaf look-and-feel, used by `Main`) |
 | Root package | `SariSariStore` (capital S). Source root = repo root (no `src/` folder). Tests are in package `tests` at the repo root. |
-| Architecture | Layered: `gui` (planned) → `service` (business logic **and** all SQL) → `model` + `util` → MySQL |
-| Entry points | `SariSariStore.Main#main` (a console demo, **not** a GUI launcher) and `tests.FeatureTests#main` (test runner) |
+| Architecture | Layered: `gui` → `service` (business logic **and** all SQL) → `model` + `util` → MySQL |
+| Entry points | `SariSariStore.Main#main` (FlatLaf Swing launcher) and `tests.FeatureTests#main` (test runner) |
 | Tests | One framework-free runner (`tests/FeatureTests.java`, no JUnit). Needs a live MySQL. |
 | Size | 11 app files (≈600 lines; 2 of them are empty files, 1 is an empty class) + 1 test file (370 lines) |
 | Origin | GitHub `mshdptts/System.SariSariStore` (remote `origin`); 24 commits, 2026-10-19 to 2026-10-31 |

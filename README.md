@@ -36,7 +36,9 @@ SariSariStore/
 ### gui/
 - **`MainFrame.java`**: The main window that holds everything together.
 - **`ProductPanel.java`**: Screen for viewing and managing products.
-- **`SalesDialog.java`**: Pop-up for recording a sale.
+- **`SalesPanel.java`**: Multi-product cart screen for recording sales.
+- **`ReportsPanel.java`**: Sales, inventory, low-stock, and out-of-stock reports.
+- **`SalesDialog.java`**: Legacy single-sale dialog retained for compatibility.
 
 ### util/
 - **`DatabaseInitializer.java`**: Creates the database and any missing tables at startup.
@@ -60,3 +62,4 @@ New-Item -ItemType Directory -Force $out
 javac -cp "lib/*" -d $out (Get-ChildItem -Recurse -Filter *.java SariSariStore, tests | Select-Object -ExpandProperty FullName)
 java -cp "$out;lib/*" tests.FeatureTests
 ```
+- **Current GUI**: `Main` launches a FlatLaf-styled, resizable dashboard with Dashboard, Products, Sales, and Reports navigation. Sales supports multiple products in one cart and uses the existing transactional `SalesService`.
