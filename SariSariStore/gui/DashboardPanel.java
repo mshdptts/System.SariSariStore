@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
+
 public class DashboardPanel extends JPanel {
     private final InventoryService inventory;
     private final ReportService reports;

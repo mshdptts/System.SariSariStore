@@ -1,6 +1,4 @@
-I’ll verify the project’s actual folder and dependency layout so the guide matches how this repository is compiled and run.
 
-Find files matching `**/*`
 
 Read , lines 1 to 140
 Completed with input: {
