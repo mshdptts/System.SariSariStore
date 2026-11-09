@@ -89,18 +89,30 @@ public class InventoryService {
     }
 
     public boolean removeProduct(Product product){
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement deleteItems = conn.prepareStatement(
+                        "DELETE FROM sale_items WHERE product_id = ?")) {
+                    deleteItems.setInt(1, product.getId());
+                    deleteItems.executeUpdate();
+                }
 
-        String sql = "DELETE FROM products WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, product.getId());
-
-            return pstmt.executeUpdate() > 0; // Returns true if a row was deleted
+                int deleted;
+                try (PreparedStatement deleteProduct = conn.prepareStatement(
+                        "DELETE FROM products WHERE id = ?")) {
+                    deleteProduct.setInt(1, product.getId());
+                    deleted = deleteProduct.executeUpdate();
+                }
+                conn.commit();
+                return deleted > 0;
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Could not remove product: " + e.getMessage(), e);
         }
-
     }
 
 

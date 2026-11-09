@@ -22,13 +22,24 @@ public final class Theme {
 
     public static void install() {
         FlatLightLaf.setup();
+        UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 14));
         UIManager.put("Component.arc", 12);
         UIManager.put("Button.arc", 18);
         UIManager.put("TextComponent.arc", 10);
+        UIManager.put("Component.focusWidth", 1);
+        UIManager.put("Component.innerFocusWidth", 0);
+        UIManager.put("Button.minimumHeight", 34);
+        UIManager.put("TextField.minimumHeight", 34);
+        UIManager.put("ComboBox.minimumHeight", 34);
+        UIManager.put("Spinner.minimumHeight", 34);
         UIManager.put("Table.rowHeight", 36);
         UIManager.put("Table.showVerticalLines", false);
+        UIManager.put("Table.showHorizontalLines", false);
+        UIManager.put("TableHeader.height", 34);
         UIManager.put("Table.selectionBackground", new Color(227, 243, 234));
         UIManager.put("Table.selectionForeground", TEXT);
+        UIManager.put("TabbedPane.showTabSeparators", false);
+        UIManager.put("MenuItem.minimumHeight", 30);
     }
 
     public static JLabel title(String text) {

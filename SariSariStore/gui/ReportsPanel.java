@@ -9,17 +9,17 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class ReportsPanel extends JPanel {
     private final ReportService reports;
     private final DefaultTableModel model = new DefaultTableModel();
     private final JTable table = new JTable(model);
-    private final JTextField from = new JTextField(LocalDate.now().toString());
-    private final JTextField to = new JTextField(LocalDate.now().toString());
+    private final DatePickerField from = new DatePickerField();
+    private final DatePickerField to = new DatePickerField();
     private final JLabel message = Theme.muted("");
-
     public ReportsPanel(ReportService reports) {
         this.reports = reports;
         setLayout(new BorderLayout(16, 16));
@@ -55,8 +55,8 @@ public class ReportsPanel extends JPanel {
 
         JPanel filters = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         filters.setOpaque(false);
-        from.setPreferredSize(new Dimension(120, 32));
-        to.setPreferredSize(new Dimension(120, 32));
+        from.setPreferredSize(new Dimension(150, 34));
+        to.setPreferredSize(new Dimension(150, 34));
         filters.add(new JLabel("From"));
         filters.add(from);
         filters.add(new JLabel("To"));
@@ -79,12 +79,13 @@ public class ReportsPanel extends JPanel {
 
     private void showSales() {
         try {
-            LocalDate start = LocalDate.parse(from.getText().trim());
-            LocalDate end = LocalDate.parse(to.getText().trim());
+            LocalDate start = parseDate(from);
+            LocalDate end = parseDate(to);
             if (start.isAfter(end)) {
                 showError("The start date cannot be after the end date.");
                 return;
             }
+
             ArrayList<SaleReport> sales = reports.getSalesReport(start.toString(), end.toString());
             setColumns("Receipt", "Date and Time", "Total");
             for (SaleReport sale : sales) {
@@ -93,11 +94,13 @@ public class ReportsPanel extends JPanel {
             }
             message.setForeground(Theme.MUTED);
             message.setText(sales.isEmpty() ? "No sales found for this date range." : "");
-        } catch (DateTimeParseException ex) {
-            showError("Use dates in YYYY-MM-DD format.");
         } catch (RuntimeException ex) {
             showError("Could not load sales report: " + ex.getMessage());
         }
+    }
+
+    private LocalDate parseDate(DatePickerField field) {
+        return field.getDate();
     }
 
     private void showInventory() {
@@ -140,5 +143,85 @@ public class ReportsPanel extends JPanel {
 
     public void refresh() {
         showSales();
+    }
+
+    private static final class DatePickerField extends JPanel {
+        private final JTextField text = new JTextField();
+        private final JButton calendar = new JButton("\u25BC");
+        private LocalDate date = LocalDate.now();
+        private YearMonth month = YearMonth.from(date);
+        private final JPopupMenu popup = new JPopupMenu();
+
+        private DatePickerField() {
+            super(new BorderLayout(4, 0));
+            setOpaque(false);
+            text.setEditable(false);
+            text.setText(date.toString());
+            text.setToolTipText("Choose a date");
+            calendar.setToolTipText("Open calendar");
+            calendar.setMargin(new Insets(0, 8, 0, 8));
+            calendar.addActionListener(e -> showCalendar());
+            add(text, BorderLayout.CENTER);
+            add(calendar, BorderLayout.EAST);
+        }
+
+        private LocalDate getDate() {
+            return date;
+        }
+
+        private void showCalendar() {
+            popup.removeAll();
+            JPanel panel = new JPanel(new BorderLayout(6, 6));
+            panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+            JPanel heading = new JPanel(new BorderLayout());
+            JButton previous = new JButton("<");
+            JButton next = new JButton(">");
+            JLabel title = new JLabel(month.format(DateTimeFormatter.ofPattern("MMMM uuuu")),
+                    SwingConstants.CENTER);
+            previous.addActionListener(e -> {
+                month = month.minusMonths(1);
+                showCalendar();
+            });
+            next.addActionListener(e -> {
+                month = month.plusMonths(1);
+                showCalendar();
+            });
+            heading.add(previous, BorderLayout.WEST);
+            heading.add(title, BorderLayout.CENTER);
+            heading.add(next, BorderLayout.EAST);
+            panel.add(heading, BorderLayout.NORTH);
+
+            JPanel days = new JPanel(new GridLayout(0, 7, 2, 2));
+            String[] weekdayNames = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+            for (String weekday : weekdayNames) {
+                JLabel label = new JLabel(weekday, SwingConstants.CENTER);
+                label.setForeground(Theme.MUTED);
+                days.add(label);
+            }
+            LocalDate first = month.atDay(1);
+            int offset = first.getDayOfWeek().getValue() - 1;
+            for (int i = 0; i < offset; i++) {
+                days.add(new JLabel());
+            }
+            for (int day = 1; day <= month.lengthOfMonth(); day++) {
+                LocalDate selected = month.atDay(day);
+                JButton dayButton = new JButton(String.valueOf(day));
+                dayButton.setMargin(new Insets(3, 3, 3, 3));
+                if (selected.equals(date)) {
+                    dayButton.setBackground(Theme.PRIMARY);
+                    dayButton.setForeground(Color.WHITE);
+                }
+                dayButton.addActionListener(e -> {
+                    date = selected;
+                    text.setText(date.toString());
+                    popup.setVisible(false);
+                });
+                days.add(dayButton);
+            }
+            panel.add(days, BorderLayout.CENTER);
+            popup.add(panel);
+            popup.show(calendar, 0, calendar.getHeight() + 2);
+        }
     }
 }

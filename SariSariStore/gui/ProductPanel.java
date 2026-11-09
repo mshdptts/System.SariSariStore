@@ -22,6 +22,7 @@ public class ProductPanel extends JPanel {
     };
     private final JTable table = new JTable(model);
     private final JLabel showing = Theme.muted("");
+    private final JLabel message = Theme.muted("");
     private final JLabel formTitle = new JLabel("Add Product");
     private final JTextField name = new JTextField();
     private final JTextField price = new JTextField();
@@ -80,7 +81,11 @@ public class ProductPanel extends JPanel {
         JPanel left = Theme.card(new BorderLayout(8, 8));
         left.add(filters, BorderLayout.NORTH);
         left.add(tableScroll, BorderLayout.CENTER);
-        left.add(showing, BorderLayout.SOUTH);
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setOpaque(false);
+        footer.add(showing, BorderLayout.WEST);
+        footer.add(message, BorderLayout.EAST);
+        left.add(footer, BorderLayout.SOUTH);
 
         JPanel form = Theme.card(new GridBagLayout());
         formTitle.setFont(formTitle.getFont().deriveFont(Font.BOLD, 16f));
@@ -172,14 +177,60 @@ public class ProductPanel extends JPanel {
             return;
         }
 
-        ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+        ImageIcon source = new ImageIcon(imageFile.getAbsolutePath());
+        Image image = source.getImage();
+        int maxSize = 520;
+        double scale = Math.min(1.0, Math.min(
+                (double) maxSize / source.getIconWidth(),
+                (double) maxSize / source.getIconHeight()));
+        ImageIcon icon = scale < 1.0
+                ? new ImageIcon(image.getScaledInstance(
+                        (int) (source.getIconWidth() * scale),
+                        (int) (source.getIconHeight() * scale),
+                        Image.SCALE_SMOOTH))
+                : source;
         JLabel photo = new JLabel(icon);
-        photo.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        photo.setHorizontalAlignment(SwingConstants.CENTER);
+        photo.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         JDialog dialog = new JDialog(
                 SwingUtilities.getWindowAncestor(this), "Jerry!", Dialog.ModalityType.MODELESS);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        dialog.add(photo);
+        dialog.setLayout(new BorderLayout(8, 8));
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(Theme.HEADER);
+        header.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 12));
+        JLabel title = new JLabel("You found Jerry!");
+        title.setForeground(Color.WHITE);
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
+        header.add(title, BorderLayout.WEST);
+        JButton close = Theme.secondary("Close");
+        close.setForeground(Color.WHITE);
+        close.setOpaque(false);
+        close.addActionListener(e -> dialog.dispose());
+        header.add(close, BorderLayout.EAST);
+
+        JLabel caption = Theme.muted("A special surprise from the product search.");
+        caption.setBorder(BorderFactory.createEmptyBorder(8, 16, 0, 16));
+        JPanel content = new JPanel(new BorderLayout());
+        content.setOpaque(false);
+        content.add(caption, BorderLayout.NORTH);
+        content.add(photo, BorderLayout.CENTER);
+        dialog.add(header, BorderLayout.NORTH);
+        dialog.add(content, BorderLayout.CENTER);
+        dialog.getRootPane().setDefaultButton(close);
+        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("ESCAPE"), "closeJerry");
+        dialog.getRootPane().getActionMap().put("closeJerry",
+                new AbstractAction() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent event) {
+                        dialog.dispose();
+                    }
+                });
         dialog.pack();
+        dialog.setMinimumSize(new Dimension(340, 260));
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
@@ -242,9 +293,10 @@ public class ProductPanel extends JPanel {
                 inventory.updateProduct(selected);
             }
             clearForm();
+            showMessage("Product saved.", Theme.MUTED);
             onChange.run();
         } catch (NumberFormatException ex) {
-            showError(ex.getMessage());
+            showError("Price and quantity must be valid numbers.");
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
@@ -252,11 +304,21 @@ public class ProductPanel extends JPanel {
 
     private void delete() {
         if (selected == null) return;
-        if (JOptionPane.showConfirmDialog(this, "Delete selected product?", "Confirm",
+        if (JOptionPane.showConfirmDialog(this,
+                "Delete selected product and its sale items?", "Confirm",
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-            inventory.removeProduct(selected);
-            clearForm();
-            onChange.run();
+            try {
+                if (!inventory.removeProduct(selected)) {
+                    showError("The selected product was not found.");
+                    return;
+                }
+                clearForm();
+                refreshProducts();
+                showMessage("Product deleted.", Theme.MUTED);
+                onChange.run();
+            } catch (RuntimeException ex) {
+                showError("Could not delete product: " + ex.getMessage());
+            }
         }
     }
 
@@ -269,18 +331,34 @@ public class ProductPanel extends JPanel {
                 JOptionPane.PLAIN_MESSAGE);
         if (value == null) return;
         try {
-            inventory.restockProduct(product.getName(), Integer.parseInt(value.trim()));
+            int quantity = Integer.parseInt(value.trim());
+            if (quantity <= 0) {
+                showError("Restock quantity must be greater than zero.");
+                return;
+            }
+            Product restocked = inventory.restockProduct(product.getName(), quantity);
+            if (restocked == null) {
+                showError("The selected product no longer exists.");
+                return;
+            }
+            showMessage(product.getName() + " restocked.", Theme.MUTED);
             onChange.run();
         } catch (NumberFormatException ex) {
-            showError(ex.getMessage());
+            showError("Restock quantity must be a whole number.");
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
+        } catch (RuntimeException ex) {
+            showError("Could not restock product: " + ex.getMessage());
         }
     }
 
     private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid product",
-                JOptionPane.ERROR_MESSAGE);
+        showMessage(message, Theme.DANGER);
+    }
+
+    private void showMessage(String text, Color color) {
+        message.setForeground(color);
+        message.setText(text);
     }
 
     public void refreshProducts() {
@@ -295,6 +373,7 @@ public class ProductPanel extends JPanel {
         price.setText("");
         quantity.setText("");
         table.clearSelection();
+        message.setText("");
     }
 
     @FunctionalInterface
