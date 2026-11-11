@@ -211,7 +211,7 @@ public class ProductPanel extends JPanel {
         close.addActionListener(e -> dialog.dispose());
         header.add(close, BorderLayout.EAST);
 
-        JLabel caption = Theme.muted("A special surprise from the product search.");
+        JLabel caption = Theme.muted("Sir kahit flat uno lang.");
         caption.setBorder(BorderFactory.createEmptyBorder(8, 16, 0, 16));
         JPanel content = new JPanel(new BorderLayout());
         content.setOpaque(false);
